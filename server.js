@@ -2,7 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 
 const app = express();
-const port = 8050;
+const port = 8080;
 
 // Configuração de conexão com o banco (usando variáveis de ambiente)
 const pool = new Pool({
