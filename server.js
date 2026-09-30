@@ -16,15 +16,7 @@ const pool = new Pool({
 app.get('/', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()');
-    
-    // O código embed foi inserido abaixo da mensagem e da data do banco
-    res.send(`
-      <h1>Comunicação com sucesso!</h1>
-      <p>Data do Banco de Dados: ${result.rows[0].now}</p>
-      <hr>
-      <iframe src="https://giphy.com/embed/m2Q7FEc0bEr4I" width="480" height="360" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
-      <p><a href="https://giphy.com/gifs/m2Q7FEc0bEr4I">via GIPHY</a></p>
-    `);
+    res.send(`<h1>Comunicação com sucesso!</h1><p>Data do Banco de Dados: ${result.rows[0].now}</p>`);
   } catch (err) {
     console.error(err);
     res.status(500).send('Erro ao conectar no banco de dados. Tente atualizar a página em alguns segundos.');
