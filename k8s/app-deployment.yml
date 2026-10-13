@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: minha-api-node
-        image: minha-api-node:1.0 # Certifique-se de compilar/carregar a imagem no cluster
+        image: node:18-alpine # Certifique-se de compilar/carregar a imagem no cluster
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
