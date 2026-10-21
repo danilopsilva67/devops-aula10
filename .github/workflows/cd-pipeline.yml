@@ -1,0 +1,76 @@
+name: Pipeline de CD - GHCR & Deploy via Docker Compose
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ 'v*.*.*' ] # Dispara na criação de tags de versão (ex: v1.0.0)
+
+permissions:
+  contents: read
+  packages: write # Permissão necessária para publicar imagens no GHCR
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/minha-api-node
+
+jobs:
+  build-and-publish:
+    name: Build e Publicação no GHCR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do Código
+        uses: actions/checkout@v4
+
+      - name: Autenticação no GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extrair Metadados e Tags de Versionamento
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=
+            type=semver,pattern={{version}}
+
+      - name: Build e Push da Imagem Docker para o GHCR
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy-homologacao:
+    name: Deploy Automático com Docker Compose
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Gerar Arquivo de Variáveis (.env) para o Compose
+        run: |
+          # Extrai a hash curta do commit para usar como tag única da imagem
+          IMAGE_TAG=${GITHUB_SHA::7}
+          echo "REGISTRY_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" > .env
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> .env
+          echo "=== Arquivo .env gerado para o deploy ==="
+          cat .env
+
+      - name: Executar Deploy no Ambiente de Homologação
+        run: |
+          echo "=== Efetuando pull da imagem no GHCR e atualizando contêineres ==="
+          # Baixa as imagens atualizadas declaradas no docker-compose.yml
+          docker compose pull
+          # Sobe/atualiza a infraestrutura em background
+          docker compose up -d --remove-orphans
+          # Exibe os contêineres em execução
+          docker compose ps
