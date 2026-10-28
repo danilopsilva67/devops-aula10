@@ -7,3 +7,10 @@
     "pg": "^8.11.3"
   }
 }
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "lint": "eslint ."
+  }
+}
