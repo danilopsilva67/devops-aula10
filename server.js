@@ -2,7 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 
 const app = express();
-const port = 8080;
+const port = process.env.PORT || 8080;
 
 // Configuração de conexão com o banco (usando variáveis de ambiente)
 const pool = new Pool({
@@ -10,7 +10,7 @@ const pool = new Pool({
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
-  port: 5432,
+  port: process.env.DB_PORT || 5432,
 });
 
 app.get('/', async (req, res) => {
@@ -23,7 +23,17 @@ app.get('/', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`App rodando na porta ${port}`);
+// Rota de Healthcheck exigida pelos testes de integração
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
 });
 
+// Inicia o servidor apenas se o arquivo for executado diretamente (ex: node server.js)
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`App rodando na porta ${port}`);
+  });
+}
+
+// Exporta o aplicativo Express para ser importado pelo Supertest nos testes
+module.exports = app;
