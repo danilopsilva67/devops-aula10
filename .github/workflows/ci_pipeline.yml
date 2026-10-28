@@ -1,4 +1,4 @@
-name: CI Process
+name: Pipeline de CI - Testes Automatizados
 
 on:
   push:
@@ -7,25 +7,22 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  test-and-lint:
+    name: Execução de Testes
     runs-on: ubuntu-latest
 
     steps:
-    - name: Baixar código do repositório
-      uses: actions/checkout@v4
+      - name: Checkout do Código
+        uses: actions/checkout@v4
 
-    - name: Configurar Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - name: Configurar Node.js (v20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-    - name: Instalar dependências do projeto
-      run: npm install
+      - name: Instalar Dependências
+        run: npm ci
 
-    # ETAPA 1: ANÁLISE ESTÁTICA DE CÓDIGO (LINTER)
-    - name: Executar análise estática de código (Linter)
-      run: npm run lint
-
-    # ETAPA 2: TESTES AUTOMATIZADOS
-    - name: Executar testes automatizados
-      run: npm test
+      - name: Executar Suíte de Testes
+        run: npm test
