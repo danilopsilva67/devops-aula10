@@ -1,18 +1,19 @@
-# Usa a imagem oficial do Node.js
-FROM node:18-alpine
+# Utiliza imagem oficial e minimalista em Alpine Linux
+FROM node:20-alpine
 
-# Define o diretório de trabalho dentro do contêiner
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copia os arquivos de dependência e instala
+# Copia primeiro apenas os manifestos de dependência (Otimização de Cache)
 COPY package*.json ./
-RUN npm install
 
-# Copia o restante do código
+# Instala apenas as dependências de produção
+RUN npm ci --only=production
+
+# Copia o código-fonte restante por último
 COPY . .
 
-# Expõe a porta que a aplicação vai usar
 EXPOSE 8080
 
-# Comando para iniciar a aplicação
+USER node
+
 CMD ["node", "server.js"]
