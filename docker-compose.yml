@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: meu_postgres_danilosilva
+    container_name: meu_postgres_homolog
     restart: always
     environment:
       POSTGRES_USER: admin
@@ -14,8 +14,8 @@ services:
 
   app:
     # Consome a imagem do GHCR e a tag dinâmica gerada no .env pelo pipeline
-    image: ${REGISTRY_IMAGE:-ghcr.io/usuario/minha-api-node}:${IMAGE_TAG:-latest}
-    container_name: minha_api_node_danilosilva
+    image: ${REGISTRY_IMAGE:-ghcr.io/usuario/minha-api-devops}:${IMAGE_TAG:-latest}
+    container_name: minha_api_node_homolog
     restart: on-failure
     ports:
       - "8080:8080"
