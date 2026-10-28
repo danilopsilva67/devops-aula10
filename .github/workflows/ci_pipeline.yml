@@ -3,6 +3,7 @@ name: Pipeline de CI - Testes Automatizados
 on:
   push:
     branches: [ "main" ]
+    tags: [ 'v*.*.*' ] # Dispara na criação de tags de versão (ex: v1.0.0)
   pull_request:
     branches: [ "main" ]
 
