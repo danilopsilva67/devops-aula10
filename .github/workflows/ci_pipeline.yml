@@ -51,14 +51,22 @@ jobs:
           from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
           raw_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
-          # Garante o sufixo OTLP correto do Elastic APM
           if not raw_endpoint.endswith("/v1/traces"):
               endpoint = raw_endpoint.rstrip("/") + "/v1/traces"
           else:
               endpoint = raw_endpoint
 
+          # Converte a string de headers (ex: "Authorization=ApiKey xxx") em um dicionário compatível com o requests
+          raw_headers = os.getenv("OTEL_EXPORTER_OTLP_HEADERS", "")
+          headers = {}
+          if raw_headers:
+              for part in raw_headers.split(","):
+                  if "=" in part:
+                      k, v = part.split("=", 1)
+                      headers[k.strip()] = v.strip()
+
           provider = TracerProvider()
-          exporter = OTLPSpanExporter(endpoint=endpoint, timeout=15)
+          exporter = OTLPSpanExporter(endpoint=endpoint, headers=headers, timeout=15)
           processor = SimpleSpanProcessor(exporter)
           provider.add_span_processor(processor)
           trace.set_tracer_provider(provider)
@@ -77,5 +85,5 @@ jobs:
 
           provider.force_flush()
           provider.shutdown()
-          print("Trace enviado e confirmado com sucesso para o Elastic APM!")
+          print("Trace enviado e autenticado com sucesso para o Elastic APM!")
           '
