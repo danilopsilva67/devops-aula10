@@ -26,7 +26,7 @@ jobs:
 
       # Configuração do OpenTelemetry com Identificadores do Grupo
       - name: OpenTelemetry Tracing Setup
-        uses: corentinmusard/otel-cicd-action@v14
+        uses: corentinmusard/otel-cicd-action@v1
         if: always() # Garante que o trace será enviado mesmo se alguma etapa anterior falhar
         with:
           otlpEndpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
