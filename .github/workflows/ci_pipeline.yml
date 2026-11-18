@@ -42,9 +42,10 @@ jobs:
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_JOB: ${{ github.job }}
         run: |
-          python -m pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
+          python -m pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp-proto-http requests
           python -c '
           import os
+          import sys
           from opentelemetry import trace
           from opentelemetry.sdk.trace import TracerProvider
           from opentelemetry.sdk.trace.export import SimpleSpanProcessor
@@ -56,7 +57,6 @@ jobs:
           else:
               endpoint = raw_endpoint
 
-          # Converte a string de headers (ex: "Authorization=ApiKey xxx") em um dicionário compatível com o requests
           raw_headers = os.getenv("OTEL_EXPORTER_OTLP_HEADERS", "")
           headers = {}
           if raw_headers:
@@ -65,25 +65,25 @@ jobs:
                       k, v = part.split("=", 1)
                       headers[k.strip()] = v.strip()
 
-          provider = TracerProvider()
-          exporter = OTLPSpanExporter(endpoint=endpoint, headers=headers, timeout=15)
-          processor = SimpleSpanProcessor(exporter)
-          provider.add_span_processor(processor)
-          trace.set_tracer_provider(provider)
+          print(f"Enviando traces para o endpoint: {endpoint}")
 
-          tracer = trace.get_tracer("github-actions-telemetry")
+          try:
+              provider = TracerProvider()
+              exporter = OTLPSpanExporter(endpoint=endpoint, headers=headers, timeout=20)
+              processor = SimpleSpanProcessor(exporter)
+              provider.add_span_processor(processor)
+              trace.set_tracer_provider(provider)
 
-          repo = os.getenv("GITHUB_REPOSITORY", "desconhecido")
-          workflow = os.getenv("GITHUB_WORKFLOW", "desconhecido")
-          run_id = os.getenv("GITHUB_RUN_ID", "desconhecido")
-          job = os.getenv("GITHUB_JOB", "desconhecido")
+              tracer = trace.get_tracer("github-actions-telemetry")
 
-          with tracer.start_as_current_span(f"GitHub Actions - {workflow} / {job}") as span:
-              span.set_attribute("github.repository", repo)
-              span.set_attribute("github.run.id", run_id)
-              span.set_attribute("github.job.name", job)
+              with tracer.start_as_current_span(f"GitHub Actions - {os.getenv(\"GITHUB_WORKFLOW\")} / {os.getenv(\"GITHUB_JOB\")}") as span:
+                  span.set_attribute("github.repository", os.getenv("GITHUB_REPOSITORY"))
+                  span.set_attribute("github.run.id", os.getenv("GITHUB_RUN_ID"))
 
-          provider.force_flush()
-          provider.shutdown()
-          print("Trace enviado e autenticado com sucesso para o Elastic APM!")
+              provider.force_flush()
+              provider.shutdown()
+              print("Processo de exportação concluído com sucesso!")
+          except Exception as e:
+              print(f"Erro crítico ao exportar spans: {e}", file=sys.stderr)
+              sys.exit(1)
           '
