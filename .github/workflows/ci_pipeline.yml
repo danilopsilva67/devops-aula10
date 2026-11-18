@@ -15,7 +15,15 @@ jobs:
     steps:
       - name: Checkout do Código
         uses: actions/checkout@v4
-
+      # Configuração do OpenTelemetry com Identificadores do Grupo
+      - name: OpenTelemetry Tracing Setup
+        uses: corentinmusard/otel-cicd-action@v1
+        with:
+          otlp-endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          
+          # 1. Identificador único do projeto/grupo no Elastic APM
+          service-name: "teste_actions_danilo"
+          
       - name: Configurar Node.js (v20)
         uses: actions/setup-node@v4
         with:
