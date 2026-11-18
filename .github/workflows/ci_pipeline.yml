@@ -33,7 +33,7 @@ jobs:
       - name: Exportar Traces para Elastic APM (OTLP Genérico)
         uses: StephenGoodall/OTLP-GitHubAction-Exporter@v3.2.13
         if: always()
-        with:
-          otlpEndpoint: ${{ secrets.ELASTIC_OTLP_ENDPOINT }}
-          otlpHeaders: ${{ secrets.ELASTIC_OTLP_HEADERS }}
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.ELASTIC_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.ELASTIC_OTLP_HEADERS }}
+          ACTION_TOKEN: ${{ secrets.GITHUB_TOKEN }}
