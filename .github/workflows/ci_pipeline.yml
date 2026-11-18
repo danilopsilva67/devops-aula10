@@ -3,10 +3,16 @@ name: Pipeline CI/CD com OpenTelemetry Tracing
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      actions: read
 
     steps:
       - name: Checkout do Repositório
@@ -22,14 +28,28 @@ jobs:
 
       - name: Executar Testes
         run: npm test
-        continue-on-error: true # Mantém o pipeline rodando para enviar o trace mesmo se os testes falharem
+        continue-on-error: true
 
-      # Configuração do OpenTelemetry com Identificadores do Grupo
-      - name: OpenTelemetry Tracing Setup
+      # -----------------------------------------------------------------
+      # SOLUÇÃO PARA A V1: Cria um artefato vazio/simples para evitar o 404
+      # -----------------------------------------------------------------
+      - name: Criar artefato de apoio (exigido pela v1)
+        if: always()
+        run: |
+          echo "Gerando artefato para o OTel v1" > otel-artifact.txt
+
+      - name: Upload do artefato de apoio
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-ci
+          path: otel-artifact.txt
+      # -----------------------------------------------------------------
+
+      - name: OpenTelemetry Tracing Setup (v1)
         uses: corentinmusard/otel-cicd-action@v1
-        if: always() # Garante que o trace será enviado mesmo se alguma etapa anterior falhar
+        if: always()
         with:
           otlpEndpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
-          # otlpHeaders: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }} # Descomente se a Dash0 exigir token/headers de autenticação
           otelServiceName: "teste_danilo"
           githubToken: ${{ secrets.GITHUB_TOKEN }}
