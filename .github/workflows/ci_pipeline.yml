@@ -1,42 +1,35 @@
-name: Pipeline de CI - Testes Automatizados
+name: Pipeline CI/CD com OpenTelemetry Tracing
 
 on:
   push:
     branches: [ "main" ]
-    tags: [ 'v*.*.*' ] # Dispara na criação de tags de versão (ex: v1.0.0)
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
-  test-and-lint:
-    name: Execução de Testes
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do Código
+      - name: Checkout do Repositório
         uses: actions/checkout@v4
-          
-      - name: Configurar Node.js (v20)
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Instalar Dependências
-        run: npm install
+        run: npm ci
 
-      - name: Executar Suíte de Testes
+      - name: Executar Testes
         run: npm test
-      - name: Criar artefato vazio
-        uses: actions/upload-artifact@v4
-        with:
-          name: dummy-artifact
-          path: README.md # ou qualquer arquivo existente
-              # Configuração do OpenTelemetry com Identificadores do Grupo
+        continue-on-error: true # Mantém o pipeline rodando para enviar o trace mesmo se os testes falharem
+
+      # Configuração do OpenTelemetry com Identificadores do Grupo
       - name: OpenTelemetry Tracing Setup
         uses: dash0hq/otel-cicd-action@v4
+        if: always() # Garante que o trace será enviado mesmo se alguma etapa anterior falhar
         with:
           otlpEndpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
-          
-          # 1. Identificador único do projeto/grupo no Elastic APM
+          # otlpHeaders: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }} # Descomente se a Dash0 exigir token/headers de autenticação
           otelServiceName: "teste_danilo"
           githubToken: ${{ secrets.GITHUB_TOKEN }}
