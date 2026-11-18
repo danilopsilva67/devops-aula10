@@ -10,7 +10,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    # Permissões completas essenciais para a API do GitHub e artefatos na v1
     permissions:
       contents: read
       actions: write
@@ -25,7 +24,6 @@ jobs:
           node-version: '20'
 
       - name: Instalar Dependências
-        # Trocado de 'npm ci' para 'npm install' para evitar erro de package-lock.json ausente
         run: npm install
 
       - name: Executar Testes
@@ -37,9 +35,9 @@ jobs:
         run: |
           echo "Gerando artefato para o OTel v1" > otel-artifact.txt
 
-      - name: Upload do artefato de apoio (Usando v3 para compatibilidade com a v1)
+      - name: Upload do artefato de apoio
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: relatorio-ci
           path: otel-artifact.txt
