@@ -1,4 +1,4 @@
-name: Pipeline CI/CD com OpenTelemetry (Elastic APM Nativo)
+name: Pipeline CI/CD com OTLP Genérico (Elastic APM)
 
 on:
   push:
@@ -10,11 +10,9 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    # Injeta as credenciais do Elastic APM como variáveis de ambiente padrão do OTel
-    env:
-      OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.ELASTIC_OTLP_ENDPOINT }}
-      OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.ELASTIC_OTLP_HEADERS }}
-      OTEL_SERVICE_NAME: "devops_danilo"
+    permissions:
+      contents: read
+      actions: read
 
     steps:
       - name: Checkout do Repositório
@@ -28,6 +26,14 @@ jobs:
       - name: Instalar Dependências
         run: npm install
 
-      - name: Executar Testes com Telemetria
+      - name: Executar Testes
         run: npm test
         continue-on-error: true
+
+      - name: Exportar Traces para Elastic APM (OTLP Genérico)
+        uses: StephenGoodall/OTLP-GitHubAction-Exporter@v3.2.13
+        if: always()
+        with:
+          otlpEndpoint: ${{ secrets.ELASTIC_OTLP_ENDPOINT }}
+          otlpHeaders: ${{ secrets.ELASTIC_OTLP_HEADERS }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
