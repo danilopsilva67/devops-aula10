@@ -63,7 +63,12 @@ jobs:
                       k, v = part.split("=", 1)
                       headers[k.strip()] = v.strip()
 
-          # Resource com convenções OpenTelemetry e mapeamento para Elastic APM
+          # Captura as variáveis de ambiente em variáveis puras do Python
+          env_job = os.getenv("GITHUB_JOB", "build")
+          env_workflow = os.getenv("GITHUB_WORKFLOW", "CI")
+          env_repo = os.getenv("GITHUB_REPOSITORY", "unknown")
+          env_run_id = os.getenv("GITHUB_RUN_ID", "0")
+
           resource = Resource.create(attributes={
               "service.name": "github-actions-ci",
               "service.version": "1.0.0",
@@ -79,11 +84,10 @@ jobs:
 
               tracer = trace.get_tracer("elastic-apm-github-actions")
 
-              # Cria um span principal categorizado como "transaction" para o Elastic APM
-              with tracer.start_as_current_span(f"{os.getenv(\"GITHUB_JOB\")} - {os.getenv(\"GITHUB_WORKFLOW\")}") as span:
-                  span.set_attribute("http.target", os.getenv("GITHUB_REPOSITORY"))
-                  span.set_attribute("github.run_id", os.getenv("GITHUB_RUN_ID"))
-                  span.set_attribute("faas.id", os.getenv("GITHUB_RUN_ID"))
+              span_name = f"{env_job} - {env_workflow}"
+              with tracer.start_as_current_span(span_name) as span:
+                  span.set_attribute("http.target", env_repo)
+                  span.set_attribute("github.run_id", env_run_id)
 
               provider.force_flush()
               provider.shutdown()
