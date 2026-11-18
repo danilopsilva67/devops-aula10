@@ -19,10 +19,10 @@ jobs:
       - name: OpenTelemetry Tracing Setup
         uses: corentinmusard/otel-cicd-action@v1
         with:
-          otlp-endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          otlpEndpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
           
           # 1. Identificador único do projeto/grupo no Elastic APM
-          service-name: "teste_actions_danilo"
+          otelServiceName: "teste danilo"
           
       - name: Configurar Node.js (v20)
         uses: actions/setup-node@v4
