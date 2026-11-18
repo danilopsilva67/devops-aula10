@@ -30,20 +30,8 @@ jobs:
         run: npm test
         continue-on-error: true
 
-      - name: Criar artefato de apoio (exigido pela v1)
-        if: always()
-        run: |
-          echo "Gerando artefato para o OTel v1" > otel-artifact.txt
-
-      - name: Upload do artefato de apoio
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: relatorio-ci
-          path: otel-artifact.txt
-
-      - name: OpenTelemetry Tracing Setup (v1)
-        uses: corentinmusard/otel-cicd-action@v1
+      - name: OpenTelemetry Tracing Setup
+        uses: dash0hq/otel-cicd-action@v4
         if: always()
         with:
           otlpEndpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
