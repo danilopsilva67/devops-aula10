@@ -37,9 +37,9 @@ jobs:
         run: |
           echo "Gerando artefato para o OTel v1" > otel-artifact.txt
 
-      - name: Upload do artefato de apoio
+      - name: Upload do artefato de apoio (Usando v3 para compatibilidade com a v1)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: relatorio-ci
           path: otel-artifact.txt
