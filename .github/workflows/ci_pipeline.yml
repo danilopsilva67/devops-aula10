@@ -47,15 +47,13 @@ jobs:
           import os
           import sys
           from opentelemetry import trace
+          from opentelemetry.sdk.resources import Resource
           from opentelemetry.sdk.trace import TracerProvider
           from opentelemetry.sdk.trace.export import SimpleSpanProcessor
           from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
           raw_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
-          if not raw_endpoint.endswith("/v1/traces"):
-              endpoint = raw_endpoint.rstrip("/") + "/v1/traces"
-          else:
-              endpoint = raw_endpoint
+          endpoint = raw_endpoint.rstrip("/") + "/v1/traces" if not raw_endpoint.endswith("/v1/traces") else raw_endpoint
 
           raw_headers = os.getenv("OTEL_EXPORTER_OTLP_HEADERS", "")
           headers = {}
@@ -65,30 +63,32 @@ jobs:
                       k, v = part.split("=", 1)
                       headers[k.strip()] = v.strip()
 
-          wf = os.getenv("GITHUB_WORKFLOW", "Pipeline")
-          jb = os.getenv("GITHUB_JOB", "job")
-          repo = os.getenv("GITHUB_REPOSITORY", "repo")
-          run_id = os.getenv("GITHUB_RUN_ID", "0")
-
-          print(f"Enviando traces para o endpoint: {endpoint}")
+          # Resource com convenções OpenTelemetry e mapeamento para Elastic APM
+          resource = Resource.create(attributes={
+              "service.name": "github-actions-ci",
+              "service.version": "1.0.0",
+              "deployment.environment": "production"
+          })
 
           try:
-              provider = TracerProvider()
+              provider = TracerProvider(resource=resource)
               exporter = OTLPSpanExporter(endpoint=endpoint, headers=headers, timeout=20)
               processor = SimpleSpanProcessor(exporter)
               provider.add_span_processor(processor)
               trace.set_tracer_provider(provider)
 
-              tracer = trace.get_tracer("github-actions-telemetry")
+              tracer = trace.get_tracer("elastic-apm-github-actions")
 
-              with tracer.start_as_current_span(f"GitHub Actions - {wf} / {jb}") as span:
-                  span.set_attribute("github.repository", repo)
-                  span.set_attribute("github.run.id", run_id)
+              # Cria um span principal categorizado como "transaction" para o Elastic APM
+              with tracer.start_as_current_span(f"{os.getenv(\"GITHUB_JOB\")} - {os.getenv(\"GITHUB_WORKFLOW\")}") as span:
+                  span.set_attribute("http.target", os.getenv("GITHUB_REPOSITORY"))
+                  span.set_attribute("github.run_id", os.getenv("GITHUB_RUN_ID"))
+                  span.set_attribute("faas.id", os.getenv("GITHUB_RUN_ID"))
 
               provider.force_flush()
               provider.shutdown()
-              print("Processo de exportação concluído com sucesso!")
+              print("Trace otimizado enviado com sucesso para o APM!")
           except Exception as e:
-              print(f"Erro crítico ao exportar spans: {e}", file=sys.stderr)
+              print(f"Erro ao exportar spans: {e}", file=sys.stderr)
               sys.exit(1)
           '
