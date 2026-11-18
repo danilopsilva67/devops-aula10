@@ -26,6 +26,11 @@ jobs:
 
       - name: Executar Suíte de Testes
         run: npm test
+      - name: Criar artefato vazio
+        uses: actions/upload-artifact@v4
+        with:
+          name: dummy-artifact
+          path: README.md # ou qualquer arquivo existente
               # Configuração do OpenTelemetry com Identificadores do Grupo
       - name: OpenTelemetry Tracing Setup
         uses: corentinmusard/otel-cicd-action@v1
