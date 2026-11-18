@@ -37,3 +37,5 @@ jobs:
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.ELASTIC_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.ELASTIC_OTLP_HEADERS }}
           ACTION_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_RUN_ID: ${{ github.run_id }}
+          WORKFLOW_RUN_NAME: ${{ github.workflow }}
