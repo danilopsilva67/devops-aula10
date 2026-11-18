@@ -1,4 +1,4 @@
-name: Pipeline CI/CD com OpenTelemetry (Elastic APM)
+name: Pipeline CI/CD com OpenTelemetry (Elastic APM Nativo)
 
 on:
   push:
@@ -10,10 +10,11 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    # Garante permissões de leitura essenciais para a API do GitHub coletar o contexto do workflow
-    permissions:
-      contents: read
-      actions: read
+    # Injeta as credenciais do Elastic APM como variáveis de ambiente padrão do OTel
+    env:
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.ELASTIC_OTLP_ENDPOINT }}
+      OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.ELASTIC_OTLP_HEADERS }}
+      OTEL_SERVICE_NAME: "devops_danilo"
 
     steps:
       - name: Checkout do Repositório
@@ -27,25 +28,6 @@ jobs:
       - name: Instalar Dependências
         run: npm install
 
-      - name: Executar Testes
+      - name: Executar Testes com Telemetria
         run: npm test
-        # O 'continue-on-error: true' garante que mesmo se os testes falharem, 
-        # o pipeline continuará para a etapa de exportação da telemetria.
         continue-on-error: true
-
-      - name: OpenTelemetry Tracing Setup (Elastic APM)
-        uses: dash0hq/otel-cicd-action@v4
-        # O 'if: always()' é fundamental: assegura que o trace do workflow inteiro 
-        # será enviado independentemente do sucesso ou falha das etapas anteriores.
-        if: always()
-        with:
-          # URL do seu Elastic APM Server (ex: Cloud ou instância self-hosted)
-          otlpEndpoint: ${{ secrets.ELASTIC_OTLP_ENDPOINT }}
-          
-          # Cabeçalho de autorização contendo a API Key ou Token do Elastic APM novo
-          otlpHeaders: ${{ secrets.ELASTIC_OTLP_HEADERS }}
-          
-          # Nome do serviço que aparecerá no Elastic APM (pode ajustar para o do seu grupo)
-          otelServiceName: "teste_danilo"
-          
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
