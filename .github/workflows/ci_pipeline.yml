@@ -1,4 +1,4 @@
-name: Pipeline CI/CD com OTLP Genérico (Elastic APM)
+name: Pipeline CI/CD com Elastic APM (Python OTLP Customizado)
 
 on:
   push:
@@ -28,29 +28,47 @@ jobs:
 
       - name: Executar Testes
         run: npm test
+        # O 'continue-on-error: true' garante que mesmo se os testes falharem, 
+        # o workflow continuará para enviar o trace do resultado ao APM.
         continue-on-error: true
-      - name: Enviar Traces OTLP Customizados para Elastic APM
+
+      - name: Enviar Traces para o Elastic APM
         if: always()
         env:
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.ELASTIC_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.ELASTIC_OTLP_HEADERS }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_JOB: ${{ github.job }}
         run: |
           python -m pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
-          python -c "
+          python -c '
           import os
           from opentelemetry import trace
           from opentelemetry.sdk.trace import TracerProvider
-          from opentelemetry.sdk.trace.export import BatchSpanProcessor
+          from opentelemetry.sdk.trace.export import SimpleSpanProcessor
           from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
           provider = TracerProvider()
-          processor = BatchSpanProcessor(OTLPSpanExporter())
+          exporter = OTLPSpanExporter()
+          processor = SimpleSpanProcessor(exporter)
           provider.add_span_processor(processor)
           trace.set_tracer_provider(provider)
 
-          tracer = trace.get_tracer('github-actions-tracer')
-          with tracer.start_as_current_span('workflow-run-${{ github.run_id }}') as span:
-              span.set_attribute('github.repository', '${{ github.repository }}')
-              span.set_attribute('github.workflow', '${{ github.workflow }}')
-          print('Trace enviado com sucesso para o Elastic APM!')
-          "
+          tracer = trace.get_tracer("github-actions-telemetry")
+
+          repo = os.getenv("GITHUB_REPOSITORY", "desconhecido")
+          workflow = os.getenv("GITHUB_WORKFLOW", "desconhecido")
+          run_id = os.getenv("GITHUB_RUN_ID", "desconhecido")
+          job = os.getenv("GITHUB_JOB", "desconhecido")
+
+          with tracer.start_as_current_span(f"GitHub Actions - {workflow} / {job}") as span:
+              span.set_attribute("github.repository", repo)
+              span.set_attribute("github.run.id", run_id)
+              span.set_attribute("github.job.name", job)
+
+          provider.force_flush()
+          provider.shutdown()
+          print("Trace enviado e confirmado com sucesso para o Elastic APM!")
+          '
