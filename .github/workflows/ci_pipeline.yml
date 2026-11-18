@@ -42,7 +42,7 @@ jobs:
           # URL do seu Elastic APM Server (ex: Cloud ou instância self-hosted)
           otlpEndpoint: ${{ secrets.ELASTIC_OTLP_ENDPOINT }}
           
-          # Cabeçalho de autorização contendo a API Key ou Token do Elastic APM
+          # Cabeçalho de autorização contendo a API Key ou Token do Elastic APM novo
           otlpHeaders: ${{ secrets.ELASTIC_OTLP_HEADERS }}
           
           # Nome do serviço que aparecerá no Elastic APM (pode ajustar para o do seu grupo)
