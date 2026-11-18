@@ -28,7 +28,7 @@ jobs:
         run: npm test
               # Configuração do OpenTelemetry com Identificadores do Grupo
       - name: OpenTelemetry Tracing Setup
-        uses: dash0hq/otel-cicd-action@v4
+        uses: corentinmusard/otel-cicd-action@v1
         with:
           otlpEndpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
           
