@@ -15,15 +15,6 @@ jobs:
     steps:
       - name: Checkout do Código
         uses: actions/checkout@v4
-      # Configuração do OpenTelemetry com Identificadores do Grupo
-      - name: OpenTelemetry Tracing Setup
-        uses: dash0hq/otel-cicd-action@v4
-        with:
-          otlpEndpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
-          
-          # 1. Identificador único do projeto/grupo no Elastic APM
-          otelServiceName: "teste_danilo"
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Configurar Node.js (v20)
         uses: actions/setup-node@v4
@@ -35,3 +26,12 @@ jobs:
 
       - name: Executar Suíte de Testes
         run: npm test
+              # Configuração do OpenTelemetry com Identificadores do Grupo
+      - name: OpenTelemetry Tracing Setup
+        uses: dash0hq/otel-cicd-action@v4
+        with:
+          otlpEndpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          
+          # 1. Identificador único do projeto/grupo no Elastic APM
+          otelServiceName: "teste_danilo"
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
