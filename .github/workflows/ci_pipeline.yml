@@ -50,8 +50,15 @@ jobs:
           from opentelemetry.sdk.trace.export import SimpleSpanProcessor
           from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
+          raw_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
+          # Garante o sufixo OTLP correto do Elastic APM
+          if not raw_endpoint.endswith("/v1/traces"):
+              endpoint = raw_endpoint.rstrip("/") + "/v1/traces"
+          else:
+              endpoint = raw_endpoint
+
           provider = TracerProvider()
-          exporter = OTLPSpanExporter()
+          exporter = OTLPSpanExporter(endpoint=endpoint, timeout=15)
           processor = SimpleSpanProcessor(exporter)
           provider.add_span_processor(processor)
           trace.set_tracer_provider(provider)
