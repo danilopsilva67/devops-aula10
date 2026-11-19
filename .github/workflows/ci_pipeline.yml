@@ -70,7 +70,7 @@ jobs:
           env_run_id = os.getenv("GITHUB_RUN_ID", "0")
 
           resource = Resource.create(attributes={
-              "service.name": "github-actions-ci",
+              "service.name": "github-danilo-aula10",
               "service.version": "1.0.0",
               "deployment.environment": "production"
           })
